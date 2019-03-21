@@ -1,0 +1,4 @@
+baudrate=115200
+apn=c1.korem2.com
+server=63.87.213.134
+port=1337
