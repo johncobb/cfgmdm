@@ -23,7 +23,7 @@ baud = 115200
 callbackFunc = None
 ser = None
 error_count = 0
-timeout_max = 5.0
+timeout_max = 1.0
 
 def handler():
 
