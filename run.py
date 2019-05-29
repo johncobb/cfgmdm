@@ -6,27 +6,31 @@ from serial import Serial
 
 device = "/dev/tty.usbserial-FTASWORM"
 baud = 115200
+config = ""
 
 ### arg parsing from command line ###
 arg_device_found = False
 arg_baud_found = False
+arg_config_found = False
 
 def usageFunc():
-    global d, b
-    print("{0}\n{1}\n\n".format(d,b))
+    global d, b, c
+    print("{0}\n{1}\n{2}\n".format(d,b,c))
 
 usageDict = {
     "d": " -d, --device, is the serial device path",
     "b": " -b, --baud, is the serial baud rate",
+    "c": " -c, --config, is the path to config file",
     "h": usageFunc
 }
 
 d = usageDict['d']
 b = usageDict['b']
+c = usageDict['c']
 
 def argParse(opts, args):
 
-    global device, baud
+    global device, baud, config
     for opt, arg in opts:
         optc = opt.lower()
         if optc in ['--help', '-h']:
@@ -38,6 +42,9 @@ def argParse(opts, args):
         elif optc in ["--baud", "-b"]:
             arg_baud_found = True
             baud = arg
+        elif optc in ["--config", "-c"]:
+            arg_config_found = True
+            config = arg
         elif optc in ['--gen', '-g']:
             pass
         
@@ -79,6 +86,15 @@ timestamp = 0.0
 
 delimeters = ["OK", ">", "ERROR"]
 buffer = ""
+
+def greeting():
+    print("\r\n")
+    print("--------------------------------------")
+    print(" BG96 Confiuration Utility")
+
+def footer():
+    print("--------------------------------------")
+
 
 def handler():
 
@@ -134,7 +150,7 @@ def handler():
                 #     print("ExpectData: ", data.ExpectData)
                 callbackFunc(buffer)
                 print("elapsed: ", elapsed)
-                print("--------------------------------------")
+                footer()
                 break
 
             # let outer while loop breathe
@@ -178,15 +194,14 @@ def modemDataReceived(buffer):
 if __name__ == '__main__':
 
     if not sys.argv[1:]:
-        print("--------------------------------------")
-        print(" BG96 Confiuration Utility")
+        greeting()
         print(" Error: The following arguments are required.")
         usageDict['h']()
-        print("--------------------------------------")
+        footer()
         sys.exit()
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'd:b:h', ['device=', 'baud=', 'help'])
+        opts, args = getopt.getopt(sys.argv[1:], 'd:b:c:h', ['device=', 'baud=', 'config=', 'help'])
     except getopt.GetoptError:
         print("Error: invalid argument.")
         sys.exit(2)
@@ -203,15 +218,14 @@ if __name__ == '__main__':
     # device = "/dev/tty.usbserial-FTASWORM"
     # baud = 115200
 
-    print("\r\n\r\n")
-    print("--------------------------------------")
-    print(" BG96 Confiuration Utility")
+    greeting()
     print(" - device: ", device)
     print(" - baud: ", baud)
-    print("--------------------------------------")
+    print(" - config: ", config)
+    footer()
     
     try:
-        with open('quec.config.json') as json_file:
+        with open(config) as json_file:
             cfg = json.load(json_file)
 
             ser = Serial(device, baudrate=baud, parity='N', stopbits=1, bytesize=8, xonxoff=0, rtscts=0)
