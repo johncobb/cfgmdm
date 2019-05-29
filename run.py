@@ -16,14 +16,20 @@ class ModemData:
     Success = False
     Data = ModemResponse.OK
 
-# start_time = 0.0
-# end_time = 0.0
 device = ""
 baud = 115200
 callbackFunc = None
 ser = None
 error_count = 0
-timeout_max = 1.0
+
+
+timeout = 0.0
+timestamp = 0.0
+
+def is_timeout():
+    if ((time.time() - timestamp) > timeout):
+        print("timedout")
+
 
 def handler():
 
@@ -33,48 +39,48 @@ def handler():
 
     # open serial
     ser.open()
+    # print(cfg)
 
     for key in cfg["cfg"]:
         
         # store the command and expected response for later use
         cmd = key[0]
         rsp = key[1]
+
         # log
-        print("cmd: ", cmd, "rsp: ", rsp)
+        # print("cmd: ", cmd)
+        # print("rsp: ", rsp)
+
+        # log current time
+        timestamp = time.time()
+        # set timeout duration
+        timeout = 1.0
 
         # send command to modem
         send(cmd)
-        start_time = time.time()
 
         while(True):
 
-            # process timeout of command
-            if ((time.time() - start_time) > timeout_max):
-                print("timedout")
-                break
-    
+            result = ModemData()
+
             # process the modem's response
-            while(ser.inWaiting() > 0):
-                # inefficient, but read one character at a time
-                # TODO: refactor to read all bytes in serial buffer
-                tmp_char = ser.read(1)
-                if(tmp_char == '\r'):
-                    # parse the accumulated buffer
-                    result = parse(tmp_buffer, rsp)
-                    print ('received ', tmp_buffer)
-                    # Check to see if we received what we were expecting
-                    if(result.Success == True):
-                        print("success")
-                        if(callbackFunc != None):
-                            callbackFunc(result)
+            while(ser.in_waiting > 0):
+                
+                line = ser.readline().decode("utf-8")
+                print(line)
+                result = parse(line, rsp)
+
+                if(result.Success == True):
+                    print("success")
+                    if(callbackFunc != None):
+                        callbackFunc(result)
+                        break
                     else:
                         error_count += 1
                         print("error: cmd: ", cmd, " rsp: ", result.Data)
-                    tmp_buffer= ""
 
-                else:
-                    tmp_buffer += tmp_char
-
+            if(result.Success == True):
+                break
             # let outer while loop breathe
             time.sleep(.005)
 
@@ -101,24 +107,25 @@ def send( cmd):
     print('sending command: ', cmd)
     ser.write(cmd.encode())
 
+
 def modemDataReceived(data):
-    print('Callback function modemDataReceived ', data)
+    print('Callback function modemDataReceived ', data.Data)
 
 
 if __name__ == '__main__':
 
 
+
     print("running mdmcfg...")
     # TODO: pass following as args from terminal
-    device = "/dev/tty.UC-232AC"
+    device = "/dev/tty.usbserial-FTASWORM"
     baud = 115200
-    cfg = {"cfg": [["AT", "OK"], ["AT", "OK"]]}
+    cfg = {"cfg": [["ATE0\r", "OK"], ["AT+CPIN?\r", "+CPIN:"], ["AT+QSIMSTAT?\r", "+QSIMSTAT:"]]}
     ser = Serial(device, baudrate=baud, parity='N', stopbits=1, bytesize=8, xonxoff=0, rtscts=0)
 
     callbackFunc = modemDataReceived
 
     handler()
-
 
     print("Exiting App...")
     exit()
