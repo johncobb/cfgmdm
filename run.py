@@ -1,7 +1,7 @@
 import time
 import threading
+import json
 from serial import Serial
-from multiprocessing import queues
 
 class ModemResponse:
     OK = "OK"
@@ -23,7 +23,6 @@ callbackFunc = None
 
 error_count = 0
 
-
 timeout = 0.0
 timestamp = 0.0
 
@@ -40,7 +39,6 @@ def handler():
 
     # open serial
     ser.open()
-    # print(cfg)
 
     for key in cfg["cfg"]:
         
@@ -114,26 +112,35 @@ def modemDataReceived(data):
     print('Callback function modemDataReceived ', data.Data)
 
 
-import json
+
 if __name__ == '__main__':
 
 
 
-    print("running mdmcfg...")
+    
     # TODO: pass following as args from terminal
     device = "/dev/tty.usbserial-FTASWORM"
     baud = 115200
     cfg = {"cfg": [["ATE0\r", "OK"], ["AT+CPIN?\r", "+CPIN:"], ["AT+QSIMSTAT?\r", "+QSIMSTAT:"]]}
+    print("\r\n\r\n")
+    print("--------------------------------------")
+    print(" BG96 Confiuration Utility")
+    print(" - device: ", device)
+    print(" - baud: ", baud)
+    print("--------------------------------------")
+    try:
+        with open('quec.config.json') as json_file:
+            cfg = json.load(json_file)
 
+            ser = Serial(device, baudrate=baud, parity='N', stopbits=1, bytesize=8, xonxoff=0, rtscts=0)
+
+            callbackFunc = modemDataReceived
+
+            handler()
+    except IOError as e:
+        print("Oops: ", e)
     
-    with open('quec.config.json') as json_file:
-        cfg = json.load(json_file)
 
-        ser = Serial(device, baudrate=baud, parity='N', stopbits=1, bytesize=8, xonxoff=0, rtscts=0)
-
-        callbackFunc = modemDataReceived
-
-        handler()
 
     print("Exiting App...")
     exit()
