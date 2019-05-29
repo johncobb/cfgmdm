@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 Running the code
 ```console
-python3 main.py -device /dev/cu.devicename -baud 115200 -profile kore -script mdm-std-binary
+python3 run.py --device /dev/path_to_device --baud 115200
 ```
 
 
