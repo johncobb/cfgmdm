@@ -141,12 +141,12 @@ if __name__ == '__main__':
     print(" - device: ", device)
     print(" - baud: ", baud)
     print("--------------------------------------")
+    
     try:
         with open('quec.config.json') as json_file:
             cfg = json.load(json_file)
 
             ser = Serial(device, baudrate=baud, parity='N', stopbits=1, bytesize=8, xonxoff=0, rtscts=0)
-
             callbackFunc = modemDataReceived
 
             handler()
