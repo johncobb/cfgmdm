@@ -15,6 +15,8 @@ class ModemResponse:
 class ModemData:
     Success = False
     Data = ModemResponse.OK
+    ExpectFound = False
+    ExpectData = ""
 
 # serial vars
 ser = None
@@ -25,15 +27,11 @@ callbackFunc = None
 error_count = 0
 
 # command timeout vars
-timeout = 0.0
+app_timeout = 0.0
 timestamp = 0.0
 
-line_delimeter = "OK"
 
-def is_timeout():
-    if ((time.time() - timestamp) > timeout):
-        print("timedout")
-
+delimeters = ["OK", ">", "ERROR"]
 buffer = ""
 
 def handler():
@@ -45,68 +43,83 @@ def handler():
     # open serial
     ser.open()
 
+    # loop through each command
     for key in cfg["cfg"]:
         
         # pull command, expect and timeout from config
         cmd = key[0]
         rsp = key[1]
-        timeout = key[2]
+        cmd_to = float(key[2])
 
-        # log current time
-        timestamp = time.time()
+        # store the start time of the command
+        cmd_ts = time.time()
 
         # send command to modem
         send(cmd)
+        # reset the buffer
         buffer = ""
+        # reset delimeter_found flag
+        delimeter_found = False
 
         while(True):
+            # calculate elapsed time
+            elapsed = (time.time() - cmd_ts)
+
+            # if the command times out break out of the loop
+            if (elapsed > cmd_to):
+                print("Error: Modem timeout waiting response.")
+                break
 
             result = ModemData()
 
             # process the modem's response
             while(ser.in_waiting > 0):
-                
+                # read next line form serial port
                 line = ser.readline().decode("utf-8")
+                # accumulate a local buffer
                 buffer += line
-                #print(line)
-                # result = parse(line, rsp)
-                result = parse(line, line_delimeter)
-                if(result.Success == True):
-                    if(callbackFunc != None):
-                        callbackFunc(buffer)
-                        break
-                    else:
-                        error_count += 1
-                        print("error: cmd: ", cmd, " rsp: ", result.Data)
 
-            # found delimeter, break from outer loop
-            # to handle next command
-            if(result.Success == True):
+                # did we get a delimeter?
+                delimeter_found = line_handler(buffer)
+
+            if delimeter_found:
+                # data = expect(buffer, rsp)
+                # if data.ExpectFound:
+                #     print("ExpectData: ", data.ExpectData)
+                callbackFunc(buffer)
+                print("elapsed: ", elapsed)
+                print("--------------------------------------")
                 break
 
             # let outer while loop breathe
-            time.sleep(.2)
+            time.sleep(.1)
 
     # close the port
     if (ser.isOpen()):
         ser.close()
 
-def parse(result, expect):
+def line_handler(buffer):
 
-    data = ModemData()
-    data.Data = result
-
-    if (result.find(expect) > -1):
-        data.Success = True
-    else:
-        data.Success = False
+    for x in delimeters:
+        if (buffer.find(x) > -1):
+            return True
     
+    return False
+
+def expect(result, parm):
+    data = ModemData()
+
+    if (result.find(parm) > -1):
+        data.ExpectFound = True
+        data.ExpectData = result
+
     return data
+
 
 """
 Write command to device
 """
-def send( cmd):
+def send(cmd):
     print('sending command: ', cmd)
     ser.write(cmd.encode())
 
@@ -140,8 +153,6 @@ if __name__ == '__main__':
     except IOError as e:
         print("Oops: ", e)
     
-
-
     print("Exiting App...")
     exit()
 
