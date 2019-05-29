@@ -126,7 +126,7 @@ if __name__ == '__main__':
     cfg = {"cfg": [["ATE0\r", "OK"], ["AT+CPIN?\r", "+CPIN:"], ["AT+QSIMSTAT?\r", "+QSIMSTAT:"]]}
 
     
-    with open('config.json') as json_file:
+    with open('quec.config.json') as json_file:
         cfg = json.load(json_file)
 
         ser = Serial(device, baudrate=baud, parity='N', stopbits=1, bytesize=8, xonxoff=0, rtscts=0)
