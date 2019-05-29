@@ -1,7 +1,53 @@
+import sys, getopt, os, glob
 import time
 import threading
 import json
 from serial import Serial
+
+device = "/dev/tty.usbserial-FTASWORM"
+baud = 115200
+
+### arg parsing from command line ###
+arg_device_found = False
+arg_baud_found = False
+
+def usageFunc():
+    global d, b
+    print("{0}\n{1}\n\n".format(d,b))
+
+usageDict = {
+    "d": " -d, --device, is the serial device path",
+    "b": " -b, --baud, is the serial baud rate",
+    "h": usageFunc
+}
+
+d = usageDict['d']
+b = usageDict['b']
+
+def argParse(opts, args):
+
+    global device, baud
+    for opt, arg in opts:
+        optc = opt.lower()
+        if optc in ['--help', '-h']:
+            usageDict['h']()
+            sys.exit()
+        elif optc in ["--device", "-d"]:
+            arg_device_found = True
+            device = arg
+        elif optc in ["--baud", "-b"]:
+            arg_baud_found = True
+            baud = arg
+        elif optc in ['--gen', '-g']:
+            pass
+        
+    if not arg_device_found:
+        print("Error: --device is a required argument.")
+        sys.exit()
+    if not arg_baud_found:
+        print("Error: --baud is a required argument.")
+        sys.exit()
+### end args handling ###
 
 class ModemResponse:
     OK = "OK"
@@ -131,9 +177,31 @@ def modemDataReceived(buffer):
 
 if __name__ == '__main__':
 
+    if not sys.argv[1:]:
+        print("--------------------------------------")
+        print(" BG96 Confiuration Utility")
+        print(" Error: The following arguments are required.")
+        usageDict['h']()
+        print("--------------------------------------")
+        sys.exit()
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'd:b:h', ['device=', 'baud=', 'help'])
+    except getopt.GetoptError:
+        print("Error: invalid argument.")
+        sys.exit(2)
+
+    if not opts and not args:
+        print("Error: No parameters provided.")
+        usageDict['h']
+        sys.exit()
+
+    argParse(opts, args)
+
+
     # TODO: pass following as args from terminal
-    device = "/dev/tty.usbserial-FTASWORM"
-    baud = 115200
+    # device = "/dev/tty.usbserial-FTASWORM"
+    # baud = 115200
 
     print("\r\n\r\n")
     print("--------------------------------------")
