@@ -16,10 +16,11 @@ class ModemData:
     Success = False
     Data = ModemResponse.OK
 
+ser = None
 device = ""
 baud = 115200
 callbackFunc = None
-ser = None
+
 error_count = 0
 
 
@@ -81,8 +82,9 @@ def handler():
 
             if(result.Success == True):
                 break
+
             # let outer while loop breathe
-            time.sleep(.005)
+            time.sleep(.2)
 
     # close the port
     if (ser.isOpen()):
@@ -112,6 +114,7 @@ def modemDataReceived(data):
     print('Callback function modemDataReceived ', data.Data)
 
 
+import json
 if __name__ == '__main__':
 
 
@@ -121,11 +124,16 @@ if __name__ == '__main__':
     device = "/dev/tty.usbserial-FTASWORM"
     baud = 115200
     cfg = {"cfg": [["ATE0\r", "OK"], ["AT+CPIN?\r", "+CPIN:"], ["AT+QSIMSTAT?\r", "+QSIMSTAT:"]]}
-    ser = Serial(device, baudrate=baud, parity='N', stopbits=1, bytesize=8, xonxoff=0, rtscts=0)
 
-    callbackFunc = modemDataReceived
+    
+    with open('config.json') as json_file:
+        cfg = json.load(json_file)
 
-    handler()
+        ser = Serial(device, baudrate=baud, parity='N', stopbits=1, bytesize=8, xonxoff=0, rtscts=0)
+
+        callbackFunc = modemDataReceived
+
+        handler()
 
     print("Exiting App...")
     exit()
