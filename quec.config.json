@@ -2,36 +2,44 @@
     "cfg": [
         [
             "ATE0\r",
-            "OK"
+            "OK",
+            1.0
         ],
         [
             "AT+CPIN?\r",
-            "+CPIN:"
+            "+CPIN:",
+            1.0
         ],
         [
             "AT+QSIMSTAT?\r",
-            "+QSIMSTAT:"
+            "+QSIMSTAT:",
+            1.0
         ],
         [
             "AT+COPS?\r",
-            "+COPS:"
+            "+COPS:",
+            1.0
         ],
 
         [
             "AT+CGREG?\r",
-            "+CGREG:"
+            "+CGREG:",
+            1.0
         ],
         [
             "AT+CSQ\r",
-            "+CSQ:"
+            "+CSQ:",
+            1.0
         ],
         [
             "AT+QNWINFO\r",
-            "+QNWINFO:"
+            "+QNWINFO:",
+            1.0
         ],
         [
             "AT+QSPN\r",
-            "+QSPN:"
+            "+QSPN:", 
+            1.0
         ]
     ]
 }
