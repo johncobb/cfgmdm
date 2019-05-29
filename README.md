@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 Running the code
 ```console
-python3 run.py --device /dev/path_to_device --baud 115200
+python3 run.py --device /dev/path_to_device --baud 115200 --config your.config.json
 ```
 
 
